@@ -1,0 +1,268 @@
+# Arch Linux Installation Guide
+
+This guide will help you install Arch Linux step by step. Make sure to follow each section in the given order.
+
+
+## **[Section 1] Connect Wi-Fi and Set Date and Time**
+
+### **1.1 Connect Wi-Fi**
+
+```
+iwctl device list
+iwctl
+device list
+station wlan0 scan
+station wlan0 get-networks
+station wlan0 connect <SSID>
+```
+
+It’s important to ensure that the date and time are correctly synchronized before starting the installation.
+
+```
+timedatectl set-ntp true
+```
+
+## **[Section 2] Partition Formatting**
+
+Replace `/dev/deviceX` with the actual devices for your installation.
+
+### **2.1 Formatting Partitions (ext4)**
+
+1.  Format the EFI partition:
+
+    ```
+    mkfs.fat -F32 /dev/device1
+    ```
+
+2.  Format the root partition (ext4):
+
+    ```
+    mkfs.ext4 /dev/device2
+    ```
+
+3.  Format the /home partition (ext4):
+
+    ```
+    mkfs.ext4 /dev/device3
+    ```
+
+4.  Set up the swap partition:
+
+    ```
+    mkswap /dev/device4
+    ```
+
+
+### **2.2 Formatting Partitions (btrfs)**
+
+1.  Format the EFI partition:
+
+    ```
+    mkfs.fat -F32 /dev/device1
+    ```
+
+2.  Format the root partition (btrfs):
+
+    ```
+    mkfs.btrfs /dev/device2
+    ```
+
+### **2.3 Configure Btrfs Subvolumes**
+
+1.  Mount the btrfs partition:
+	```
+	mount -v /dev/device2 /mnt
+	```
+
+2.  Create the subvolumes:
+
+    ```
+    btrfs subvolume create /mnt/@
+    btrfs subvolume create /mnt/@home
+    btrfs subvolume create /mnt/@log
+    btrfs subvolume create /mnt/@cache
+    btrfs subvolume create /mnt/@snapshots
+    ```
+
+3.  Unmount the btrfs partition:
+
+    ```
+    umount /mnt
+    ```
+
+
+## **[Section 3] Mount Partitions**
+
+### **3.1 Mounting Partitions (ext4)**
+
+1.  Mount the root partition:
+
+    ```
+    mount -v /dev/device2 /mnt
+    ```
+
+2.  Mount the EFI partition to /boot:
+
+    ```
+    mount -v /dev/device1 /mnt/boot
+    ```
+
+3.  Mount the /home partition:
+
+    ```
+    mount -v /dev/device3 /mnt/home
+    ```
+
+4.  Activate swap:
+
+    ```
+    swapon -v /dev/device4
+    ```
+
+
+### **3.2 Mounting Partitions (btrfs)**
+
+1.  Mount the root partition with options:
+
+    ```
+    mount -o noatime,compress=zstd,space_cache=v2,subvol=@ /dev/device2 /mnt
+    ```
+
+2.  Create and mount the subvolumes:
+
+    ```
+    mkdir -pv /mnt/{boot,home,var/log,var/cache,.snapshots}
+    ```
+
+3.  Mount the EFI partition to /boot:
+
+    ```
+    mount -v /dev/device1 /mnt/boot
+    ```
+
+4.  Create swap:
+
+    ```
+    btrfs filesystem mkswapfile --size <SIZE> /swapfile
+    ```
+
+
+## **[Section 4] Configure Repositories and Install the Base System**
+
+1.  Update the mirror list with the fastest mirrors:
+
+    ```
+    reflector --verbose --latest 5 --sort rate --save /etc/pacman.d/mirrorlist
+    ```
+
+2.  Install the base system:
+
+    -   For ext4:
+
+        ```
+        pacstrap /mnt base linux linux-firmware
+        ```
+
+    -   For btrfs:
+
+        ```
+        pacstrap /mnt base linux linux-firmware btrfs-progs
+        ```
+
+
+## **[Section 5] Generate fstab**
+
+Generate the `fstab` file to ensure the system recognizes the mounted partitions on boot.
+
+```
+genfstab -U /mnt >> /mnt/etc/fstab
+```
+
+## **[Section 6] Basic Configuration in chroot**
+
+1.  Enter chroot:
+
+    ```
+    arch-chroot /mnt
+    ```
+
+2.  Set time zone:
+
+    ```
+    ln -sf /usr/share/zoneinfo/<REGION>/<CITY> /etc/localtime
+    ```
+
+3.  Configure language and locales:
+
+    ```
+    echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen
+    ```
+
+4.  Configure the keyboard layout:
+
+    ```
+    echo "KEYMAP=la-latin1" > /etc/vconsole.conf
+    echo "FONT=lat9w-16" > /etc/vconsole.conf
+    ```
+
+5.  Set the hostname:
+
+    ```
+    echo "hostname" > /etc/hostname
+    ```
+
+6.  Install essential packages:
+
+    ```
+    pacman -S grub efibootmgr networkmanager sudo nano
+    ```
+
+7.  Install GRUB:
+
+    ```
+    grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=ARCH
+    grub-mkconfig -o /boot/grub/grub.cfg
+    ```
+
+8.  Set root password:
+
+    ```
+    passwd
+    ```
+
+9.  Create a user:
+
+    ```
+	useradd -m user
+	passwd user
+	usermod -aG wheel,audio,video,optical,storage user
+    ```
+
+10.  Exit chroot, unmount, and reboot:
+
+
+		```
+		exit
+		umount -v /mnt/*
+		umount -v /mnt
+		reboot
+		```
+
+## **[Section 7] After Reboot**
+
+1.  Connect to Wi-Fi:
+
+    ```
+    nmcli device wifi connect <SSID> --ask
+    ```
+
+2.  Update the system and set up a graphical environment (e.g., Plasma and SDDM and Konsole):
+
+    ```
+    sudo pacman -Syu
+    sudo pacman -S plasma sddm konsole
+    sudo systemctl enable sddm
+    ```
+
+
+This guide should help you install Arch Linux and set up an initial graphical environment.
