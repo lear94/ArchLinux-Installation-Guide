@@ -194,12 +194,15 @@ genfstab -U /mnt >> /mnt/etc/fstab
 
     ```
     ln -sf /usr/share/zoneinfo/<REGION>/<CITY> /etc/localtime
+    hwclock --systohc
     ```
 
 3.  Configure language and locales:
 
     ```
     echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen
+    locale-gen
+    echo "LANG=en_US.UTF-8" > /etc/locale.conf
     ```
 
 4.  Configure the keyboard layout:
