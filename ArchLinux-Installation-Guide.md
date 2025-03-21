@@ -132,6 +132,10 @@ Replace `/dev/deviceX` with the actual devices for your installation.
 
     ```
     mkdir -pv /mnt/{boot,home,var/log,var/cache,.snapshots}
+    mount -o noatime,compress=zstd,space_cache=v2,subvol=@home /dev/device2 /mnt/home
+    mount -o noatime,compress=zstd,space_cache=v2,subvol=@log /dev/device2 /mnt/var/log
+    mount -o noatime,compress=zstd,space_cache=v2,subvol=@cache /dev/device2 /mnt/var/cache
+    mount -o noatime,compress=zstd,space_cache=v2,subvol=@snapshots /dev/device2 /mnt/.snapshots
     ```
 
 3.  Mount the EFI partition to /boot:
