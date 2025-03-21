@@ -60,7 +60,7 @@ Replace `/dev/deviceX` with the actual devices for your installation.
     mkfs.fat -F32 /dev/device1
     ```
 
-2.  Format the root partition (btrfs):
+2.  Format the btrfs partition:
 
     ```
     mkfs.btrfs /dev/device2
@@ -142,13 +142,7 @@ Replace `/dev/deviceX` with the actual devices for your installation.
     ```
     mount -v /dev/device1 /mnt/boot
     ```
-
-4.  Create swap:
-
-    ```
-    btrfs filesystem mkswapfile --size <SIZE> /swapfile
-    ```
-
+    
 
 ## **[Section 4] Configure Repositories and Install the Base System**
 
@@ -269,6 +263,15 @@ genfstab -U /mnt >> /mnt/etc/fstab
     sudo pacman -S plasma sddm konsole
     sudo systemctl enable sddm
     ```
+    
+3. Create swap (btrfs):
 
-
+    ```
+    btrfs filesystem mkswapfile --size <SIZE> /swapfile
+    ```
+4. Add swap entry in fstab (btrfs):
+   ```
+   /swapfile none swap defaults 0 0
+    ```
+   
 This guide should help you install Arch Linux and set up an initial graphical environment.
