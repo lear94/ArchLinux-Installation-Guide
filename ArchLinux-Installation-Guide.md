@@ -8,7 +8,6 @@ This guide will help you install Arch Linux step by step. Make sure to follow ea
 ### **1.1 Connect Wi-Fi**
 
 ```
-iwctl device list
 iwctl
 device list
 station wlan0 scan
