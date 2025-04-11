@@ -25,7 +25,7 @@ timedatectl set-ntp true
 
 Replace `/dev/deviceX` with the actual devices for your installation.
 
-### **2.1 Formatting Partitions (ext4)**
+### **2.1 Formatting Partitions**
 
 1.  Format the EFI partition:
 
@@ -33,42 +33,15 @@ Replace `/dev/deviceX` with the actual devices for your installation.
     mkfs.fat -F32 /dev/device1
     ```
 
-2.  Format the root partition (ext4):
-
-    ```
-    mkfs.ext4 /dev/device2
-    ```
-
-3.  Format the /home partition (ext4):
-
-    ```
-    mkfs.ext4 /dev/device3
-    ```
-
-4.  Set up the swap partition:
-
-    ```
-    mkswap /dev/device4
-    ```
-
-
-### **2.2 Formatting Partitions (btrfs)**
-
-1.  Format the EFI partition:
-
-    ```
-    mkfs.fat -F32 /dev/device1
-    ```
-
-2.  Format the btrfs partition:
+2.  Format the partition:
 
     ```
     mkfs.btrfs /dev/device2
     ```
 
-### **2.3 Configure Btrfs Subvolumes**
+### **2.2 ConfigureSubvolumes**
 
-1.  Mount the btrfs partition:
+1.  Mount the partition:
 	```
 	mount -v /dev/device2 /mnt
 	```
@@ -83,7 +56,7 @@ Replace `/dev/deviceX` with the actual devices for your installation.
     btrfs subvolume create /mnt/@snapshots
     ```
 
-3.  Unmount the btrfs partition:
+3.  Unmount the partition:
 
     ```
     umount /mnt
@@ -92,34 +65,7 @@ Replace `/dev/deviceX` with the actual devices for your installation.
 
 ## **[Section 3] Mount Partitions**
 
-### **3.1 Mounting Partitions (ext4)**
-
-1.  Mount the root partition:
-
-    ```
-    mount -v /dev/device2 /mnt
-    ```
-
-2.  Mount the EFI partition to /boot:
-
-    ```
-    mount -v /dev/device1 /mnt/boot
-    ```
-
-3.  Mount the /home partition:
-
-    ```
-    mount -v /dev/device3 /mnt/home
-    ```
-
-4.  Activate swap:
-
-    ```
-    swapon -v /dev/device4
-    ```
-
-
-### **3.2 Mounting Partitions (btrfs)**
+### **3.1 Mounting Partitions**
 
 1.  Mount the root partition with options:
 
@@ -154,17 +100,9 @@ Replace `/dev/deviceX` with the actual devices for your installation.
 
 2.  Install the base system:
 
-    -   For ext4:
-
-        ```
-        pacstrap /mnt base linux linux-firmware
-        ```
-
-    -   For btrfs:
-
-        ```
-        pacstrap /mnt base linux linux-firmware btrfs-progs
-        ```
+     ```
+     pacstrap /mnt base linux linux-firmware btrfs-progs
+     ```
 
 
 ## **[Section 5] Generate fstab**
@@ -236,17 +174,16 @@ genfstab -U /mnt >> /mnt/etc/fstab
 	useradd -m user
 	passwd user
 	usermod -aG wheel,audio,video,optical,storage user
-    ```
+    ``` 
 
 10.  Exit chroot, unmount, and reboot:
-
-
-		```
-		exit
-		umount -v /mnt/*
-		umount -v /mnt
-		reboot
-		```
+    
+	    ```
+	    exit
+	    umount -v /mnt/{boot,home,var/log,var/cache,.snapshots}
+	    umount -v /mnt
+	    reboot
+	    ```
 
 ## **[Section 7] After Reboot**
 
@@ -264,12 +201,12 @@ genfstab -U /mnt >> /mnt/etc/fstab
     sudo systemctl enable sddm
     ```
     
-3. Create swap (btrfs):
+3. Create swap:
 
     ```
     btrfs filesystem mkswapfile --size <SIZE> /swapfile
     ```
-4. Add swap entry in fstab (btrfs):
+4. Add swap entry in fstab:
    ```
    /swapfile none swap defaults 0 0
     ```
